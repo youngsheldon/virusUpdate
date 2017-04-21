@@ -14,7 +14,7 @@ BOT_NAME = 'virusUpdate'
 SPIDER_MODULES = ['virusUpdate.spiders']
 NEWSPIDER_MODULE = 'virusUpdate.spiders'
 
-FEED_URI = u'/Users/sheldon/Desktop/virus_info.csv'
+FEED_URI = u'virus_info.csv'
 FEED_FORMAT = 'CSV'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
