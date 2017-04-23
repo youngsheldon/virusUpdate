@@ -14,8 +14,9 @@ BOT_NAME = 'virusUpdate'
 SPIDER_MODULES = ['virusUpdate.spiders']
 NEWSPIDER_MODULE = 'virusUpdate.spiders'
 
-FEED_URI = u'virus_info.csv'
-FEED_FORMAT = 'CSV'
+# FEED_URI = u'virus_info.csv'
+# FEED_FORMAT = 'CSV'
+# FEED_EXPORT_FIELDS = ["foo", "bar", "baz"]
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'Mozilla/5.0 (Windows NT 6.3; WOW64; rv:45.0) Gecko/20100101 Firefox/45.0'
@@ -66,9 +67,9 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'virusUpdate.pipelines.VirusupdatePipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'virusUpdate.pipelines.VirusupdatePipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html

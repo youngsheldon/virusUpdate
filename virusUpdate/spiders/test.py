@@ -2,13 +2,15 @@
 import urllib2
 import json
 
-html = urllib2.urlopen(r'https://appstore.anva.org.cn/Login/getUrlList?md5=7f0564a57fd78b8faa4a8b3648ca3651')
- 
-hjson = json.loads(html.read())
-url_info = hjson[0]
-print url_info['app_name']
-print url_info['url']
-print url_info['market_id']
-print url_info['state'].encode('utf-8')
-print url_info['market_name'].encode('utf-8')
-print url_info['add_time']
+def get_total():
+	target_website = r'https://appstore.anva.org.cn/Login/getBlackList?starttime=&endtime=&type=all&md5=&limit=20'
+	try:
+		html = urllib2.urlopen(target_website)
+	except Exception, e:
+		html = urllib2.urlopen(target_website)
+	hjson = json.loads(html.read())
+	return hjson['total']
+
+dev = 1
+for i in range(1,dev + 2):
+	print i
