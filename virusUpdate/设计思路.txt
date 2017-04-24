@@ -1,3 +1,119 @@
 1#定时抓取首页获取total数值与储存的数值total_his比较,若两个数值不相等则进行页面爬取
 2#爬取过程把md5记录在md5_his.txt文件中，若md5已经存在于该文件中则不进行url爬取
-2#对于新的md5数据进行入库
+3#对于新的md5数据进行入库
+
+create table cnfg_virus_sm_url_blacklist (
+    code                            char(8)                      not null  ,
+    url                             varchar(128)                     null  ,
+    ip                              varchar(16)                      null  ,
+    md5                             varchar(32)                      null  ,
+    state                           int                              null  ,
+    begin_date                      datetime                         null  ,
+    end_date                        datetime                         null  ,
+    source                          int                              null  ,
+    modifier                        varchar(64)                      null  ,
+    modified_date                   datetime                         null  ,
+    remark                          varchar(255)                     null  ,
+    content                         varchar(580)                     null   
+)
+
+call sp_add_virus_list(20,0,0,url,'',md5,'由病毒库自动更新程序添加');
+
+create or replace procedure sp_add_virus_list
+(
+    type    in int,     --类型:10=白名单;20=黑名单;11=白名单变种;21=黑名单变种
+    grade   in int,     --等级
+    ucode   in varchar, --UCODE
+    url in varchar, --URL
+    eip in varchar, --目标IP
+    apkMD5  in varchar, --APK的MD5
+    remark  in varchar  --描述内容
+)is
+id      varchar(20);
+servername  varchar(32);
+tablename   varchar(32);
+len     int;
+v_count     int;
+v_url       varchar(128);
+sqlbuf      varchar(4096);
+begin
+    --类型判断
+    if type = 10 then
+        servername := 'CNFGVIRUSSMURLWHITELIST';
+        tablename := 'cnfg_virus_sm_url_whitelist';
+    elsif type = 11 then
+        servername := 'CNFGURLWHITELISTVARIETY';
+        tablename := 'cnfg_url_whitelist_variety';
+    elsif type = 20 then
+        servername := 'CNFGVIRUSSMURLBLACKLIST';
+        tablename := 'cnfg_virus_sm_url_blacklist';
+    elsif type = 21 then
+        servername := 'CNFGURLBLACKLISTVARIETY';
+        tablename := 'cnfg_url_blacklist_variety';
+    else
+        sqlbuf := 'Error : type error';
+        DBMS_OUTPUT.PUT_LINE(sqlbuf);
+        return;
+    end if;
+  DBMS_OUTPUT.PUT_LINE(tablename);
+    v_url := url;
+    --数据是否为空
+    len := length(v_url);
+    if len < 4 then
+        sqlbuf := v_url || ' is shorter then 4';
+        DBMS_OUTPUT.PUT_LINE(sqlbuf);
+        return;
+    end if;
+
+    --whitelist
+    select count(1) into v_count from cnfg_virus_sm_url_whitelist where url=v_url;
+    if v_count != 0 then
+        sqlbuf := v_url || ' is already whitelist';
+        DBMS_OUTPUT.PUT_LINE(sqlbuf);
+        return;
+    end if;
+
+    --whitelist_variety
+    select count(1) into v_count from cnfg_url_whitelist_variety where url=v_url;
+    if v_count != 0 then
+        sqlbuf := v_url || ' is already whitelist_variety';
+        DBMS_OUTPUT.PUT_LINE(sqlbuf);
+        return;
+    end if;
+
+    --blacklist
+    select count(1) into v_count from cnfg_virus_sm_url_blacklist where url=v_url;
+    if v_count != 0 then
+        sqlbuf := v_url || ' is already blacklist';
+        DBMS_OUTPUT.PUT_LINE(sqlbuf);
+        return;
+    end if;
+
+    --blacklist_variety
+    select count(1) into v_count from cnfg_url_blacklist_variety where url=v_url;
+    if v_count != 0 then
+        sqlbuf := v_url || ' is already blacklist_variety';
+        DBMS_OUTPUT.PUT_LINE(sqlbuf);
+        return;
+    end if;
+    
+    --确认主键
+    getnextcode(v_count, servername, '');
+    id := '00000000'||to_char(v_count);
+    id := substr(id,-8,8);
+    
+    if grade > 0 then
+        sqlbuf := 'insert into ' || tablename || '(code,url,ip,md5,remark,source,state,begin_date,end_date,modified_date,ucode,grade) ' ||
+            'values ('''|| id ||''',''' ||  v_url || ''',''' || eip || ''',''' || apkMD5 || ''',''' || remark || ''',' ||
+            '1, 1, sysdate, add_months(sysdate,3), sysdate,''' || ucode || ''','''|| grade ||''')';
+    else
+        sqlbuf := 'insert into ' || tablename || '(code,url,ip,md5,remark,source,state,begin_date,end_date,modified_date) ' ||
+            'values ('''|| id ||''',''' ||  v_url || ''',''' || eip || ''',''' || apkMD5 || ''',''' || remark || ''',' ||
+            '1, 1, sysdate, add_months(sysdate,3), sysdate)';
+    end if;
+
+    DBMS_OUTPUT.PUT_LINE(sqlbuf);
+    execute immediate sqlbuf;
+
+    commit;
+end;
